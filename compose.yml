@@ -44,7 +44,7 @@ services:
 
   # Create buckets for minio.
   createbuckets:
-    image: minio/mc
+    image: quay.io/minio/mc:latest
     depends_on:
       - minio
     entrypoint: >
