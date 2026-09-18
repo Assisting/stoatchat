@@ -29,7 +29,7 @@ services:
 
   # MinIO
   minio:
-    image: firstfinger/minio:latest
+    image: docker.io/pgsty/silo:latest
     #command: server /data
     environment:
       MINIO_ROOT_USER: minioautumn
@@ -44,7 +44,7 @@ services:
 
   # Create buckets for minio.
   createbuckets:
-    image: quay.io/minio/mc:latest
+    image: docker.io/pgsty/mc:latest
     depends_on:
       - minio
     entrypoint: >
