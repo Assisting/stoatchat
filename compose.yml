@@ -7,7 +7,7 @@ services:
 
   # MongoDB
   database:
-    image: mongo:latest
+    image: mongo
     command: mongod --replSet rs0
     ports:
       - "27017:27017"
