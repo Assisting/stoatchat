@@ -96,6 +96,10 @@ pub enum EventV1 {
     Pong {
         data: Ping,
     },
+
+    /// Release the bees.
+    Bees,
+
     /// New message
     Message(Message),
 

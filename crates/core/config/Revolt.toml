@@ -63,14 +63,14 @@ expire_account_deletion = 86400  # 3600 * 24
 [api.security]
 # Authifier Shield API key
 authifier_shield_key = ""
-# Legacy voice server management token
-voso_legacy_token = ""
 # Whether services are behind the Cloudflare network
 trust_cloudflare = false
 # easypwned endpoint
 easypwned = ""
 # Tenor API Key
 tenor_key = ""
+# Admin keys for future admin api and for bonfire reported image fetching
+admin_keys = []
 
 [api.security.captcha]
 # hCaptcha configuration
@@ -251,6 +251,9 @@ body_limit_size = 20_000_000
 # If any userids are entered here, only those users will be able to create servers.
 # Leave empty to allow all users to create servers
 restrict_server_creation = []
+
+# Number of days after creation before an invite expires
+max_invite_duration_days = 30
 
 [features.limits.new_user]
 # Limits imposed on new users

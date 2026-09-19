@@ -8,7 +8,7 @@ use futures_locks::RwLock;
 use serde::Deserialize;
 
 #[cfg(feature = "sentry")]
-pub use sentry::{capture_error, capture_message, Level};
+pub use sentry::{Level, capture_error, capture_message};
 #[cfg(feature = "anyhow")]
 pub use sentry_anyhow::capture_anyhow;
 
@@ -224,11 +224,11 @@ pub struct ApiSecurityShield {
 #[derive(Deserialize, Debug, Clone)]
 pub struct ApiSecurity {
     pub shield: ApiSecurityShield,
-    pub voso_legacy_token: String,
     pub captcha: ApiSecurityCaptcha,
     pub trust_cloudflare: bool,
     pub easypwned: String,
     pub tenor_key: String,
+    pub admin_keys: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -387,6 +387,8 @@ pub struct GlobalLimits {
     pub body_limit_size: usize,
 
     pub restrict_server_creation: Vec<String>,
+
+    pub max_invite_duration_days: usize,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -511,7 +513,9 @@ pub async fn config_no_cache() -> Settings {
 
     // inject REDIS_URI for redis-kiss library
     if std::env::var("REDIS_URI").is_err() {
-        std::env::set_var("REDIS_URI", config.database.redis.clone());
+        unsafe {
+            std::env::set_var("REDIS_URI", config.database.redis.clone());
+        }
     }
 
     // auto-detect production nodes
@@ -556,11 +560,15 @@ pub async fn overwrite_config(f: impl FnOnce(&mut Settings)) {
 #[cfg(feature = "sentry")]
 pub async fn setup_logging(release: &'static str, dsn: String) -> Option<sentry::ClientInitGuard> {
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "info");
+        unsafe {
+            std::env::set_var("RUST_LOG", "info");
+        }
     }
 
     if std::env::var("ROCKET_ADDRESS").is_err() {
-        std::env::set_var("ROCKET_ADDRESS", "0.0.0.0");
+        unsafe {
+            std::env::set_var("ROCKET_ADDRESS", "0.0.0.0");
+        }
     }
 
     pretty_env_logger::init();
