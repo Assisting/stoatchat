@@ -385,10 +385,32 @@ pub enum EventV1 {
 }
 
 impl EventV1 {
+    // Shim for legacy redis channel names
+    fn redis_suffix(&self, channel: String) -> String {
+        use EventV1::*;
+        match self {
+            ChannelAck { .. }
+            | Logout
+            | DeleteSession { .. }
+            | DeleteAllSessions { .. }
+            | UserRelationship { .. }
+            | UserSettingsUpdate { .. }
+            | UserSlowmodes { .. }
+            | UserMoveVoiceChannel { .. }
+            | ServerCreate { .. } => format!("{channel}!"),
+
+            _ => channel,
+        }
+    }
+
     /// Publish helper wrapper
     pub async fn p(self, channel: String) {
         #[cfg(debug_assertions)]
         info!("Publishing event to {channel}: {self:?}");
+
+        let redis_channel = self.redis_suffix(channel.clone());
+
+        redis_kiss::publish(redis_channel, &self).await.unwrap();
 
         if let Err(e) = get_amqp().publish_event(channel, &self).await {
             if cfg!(debug_assertions) {
@@ -402,6 +424,11 @@ impl EventV1 {
     pub async fn p_broadcast(self, channels: Vec<String>) {
         #[cfg(debug_assertions)]
         info!("Broadcasting event to channels: {channels:?}: {self:?}");
+
+        for channel in &channels {
+            let redis_channel = self.redis_suffix(channel.clone());
+            redis_kiss::publish(redis_channel, &self).await.unwrap();
+        }
 
         if let Err(e) = get_amqp().publish_event_broadcast(channels, &self).await {
             if cfg!(debug_assertions) {
