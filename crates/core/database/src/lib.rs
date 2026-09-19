@@ -164,6 +164,8 @@ macro_rules! database_test {
         .await
         .expect("Database connection failed.");
 
+        $crate::AMQP::new_auto().await;
+
         db.drop_database().await;
 
         #[allow(clippy::redundant_closure_call)]
