@@ -3,13 +3,13 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
-use crate::events::{client::EventV1, rabbit::*};
 use crate::User;
+use crate::events::{client::EventV1, rabbit::*};
 use lapin::{
+    BasicProperties, Channel, Connection, ConnectionProperties, Error as AMQPError,
     options::BasicPublishOptions,
     protocol::basic::AMQPProperties,
     types::{AMQPValue, FieldTable},
-    BasicProperties, Channel, Connection, ConnectionProperties, Error as AMQPError,
 };
 use revolt_config::config;
 use revolt_models::v0::PushNotification;
@@ -87,6 +87,10 @@ impl AMQP {
                 .await
                 .expect("Failed to create channel"),
         )
+    }
+
+    pub fn connection(&self) -> &Arc<Connection> {
+        &self.connection
     }
 
     pub async fn friend_request_accepted(

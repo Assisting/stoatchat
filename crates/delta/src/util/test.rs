@@ -1,15 +1,19 @@
 use std::time::Duration;
 
 use futures::{FutureExt, StreamExt};
+use lapin::{
+    ExchangeKind, options::ExchangeDeclareOptions, protocol::basic::AMQPProperties,
+    types::FieldTable,
+};
 use rand::Rng;
 use redis_kiss::redis::aio::PubSub;
 use revolt_database::util::email::normalise_email;
 use revolt_database::util::password::hash_password;
 use revolt_database::{
-    events::client::EventV1, Channel, Database, Member, Message, PartialRole, Server, User, AMQP,
+    AMQP, Channel, Database, Member, Message, PartialRole, Server, User, events::client::EventV1,
 };
-use revolt_database::{util::idempotency::IdempotencyKey, Role};
 use revolt_database::{Account, EmailVerification, Session};
+use revolt_database::{Role, util::idempotency::IdempotencyKey};
 use revolt_models::v0;
 use revolt_permissions::OverrideField;
 use rocket::http::Header;
@@ -36,12 +40,20 @@ impl TestHarness {
             .clone();
 
         let amqp = AMQP::new_auto().await;
-
-        TestHarness {
-            client,
-            db,
-            amqp,
-        }
+        let channel = amqp.connection().create_channel().await.expect("channel");
+        channel
+            .exchange_declare(
+                "revolt.default".into(),
+                ExchangeKind::Topic,
+                ExchangeDeclareOptions {
+                    durable: true,
+                    ..Default::default()
+                },
+                FieldTable::default(),
+            )
+            .await
+            .expect("Failed to declare test exchange");
+        TestHarness { client, db, amqp }
     }
 
     pub fn rand_string() -> String {
@@ -231,7 +243,7 @@ pub struct PubSubTestHelper {
 }
 
 impl PubSubTestHelper {
-    pub async fn new (topic: &str) -> Self {
+    pub async fn new(topic: &str) -> Self {
         let mut sub = redis_kiss::open_pubsub_connection()
             .await
             .expect("`PubSub`");
