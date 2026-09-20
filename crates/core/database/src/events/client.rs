@@ -11,7 +11,7 @@ use revolt_models::v0::{
     UserVoiceState, Webhook,
 };
 
-use crate::{amqp::get_amqp, Account, Database, Session};
+use crate::{Account, Database, Session, amqp::get_amqp};
 
 /// Ping Packet
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -401,6 +401,7 @@ impl EventV1 {
             | UserSettingsUpdate { .. }
             | UserSlowmodes { .. }
             | UserMoveVoiceChannel { .. }
+            | ChannelCreate(Channel::DirectMessage { .. } | Channel::Group { .. })
             | ServerCreate { .. } => format!("{channel}!"),
 
             _ => channel,
