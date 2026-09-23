@@ -306,6 +306,7 @@ pub async fn edit(
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashSet;
     use crate::{rocket, util::test::TestHarness};
     use revolt_database::{Channel, RelationshipStatus};
     use revolt_models::v0::{DataCreateGroup, SystemMessage};
@@ -319,38 +320,17 @@ mod test {
         let (_, session, mut user) = harness.new_user().await;
         let (_, _, mut other_user) = harness.new_user().await;
 
-        user.apply_relationship(
-            &harness.db,
-            &mut other_user,
-            RelationshipStatus::Friend,
-            RelationshipStatus::Friend,
-        )
-            .await
-            .unwrap();
-
         // Create a group chat
         let group = Channel::create_group(
             &harness.db,
-            DataCreateGroup::default(),
+            DataCreateGroup {
+                users: HashSet::from([other_user.id.clone()]),
+                ..Default::default()
+            },
             user.id.clone(),
         )
             .await
             .expect("`Channel`");
-
-        // Add other user to group
-        let bot_response = harness
-            .client
-            .put(format!(
-                "/channels/{}/recipients/{}",
-                group.id(),
-                other_user.id
-            ))
-            .header(Header::new("x-session-token", session.token.to_string()))
-            .dispatch()
-            .await;
-
-        assert_eq!(bot_response.status(), Status::NoContent);
-        drop(bot_response);
 
         let mut pubsub = PubSubTestHelper::new(group.id()).await;
 
@@ -394,39 +374,17 @@ mod test {
         let (_, session, mut user) = harness.new_user().await;
         let (_, mut bot_user) = harness.new_bot(&user).await;
 
-        // This is terribly sad
-        user.apply_relationship(
-            &harness.db,
-            &mut bot_user,
-            RelationshipStatus::Friend,
-            RelationshipStatus::Friend,
-        )
-            .await
-            .unwrap();
-
         // Create a group chat
         let group = Channel::create_group(
             &harness.db,
-            DataCreateGroup::default(),
+            DataCreateGroup {
+                users: HashSet::from([bot_user.id.clone()]),
+                ..Default::default()
+            },
             user.id.clone(),
         )
             .await
             .expect("`Channel`");
-
-        // Add bot to group
-        let bot_response = harness
-            .client
-            .put(format!(
-                "/channels/{}/recipients/{}",
-                group.id(),
-                bot_user.id
-            ))
-            .header(Header::new("x-session-token", session.token.to_string()))
-            .dispatch()
-            .await;
-
-        assert_eq!(bot_response.status(), Status::NoContent);
-        drop(bot_response);
 
         // Make bot the owner
         let owner_response = harness
