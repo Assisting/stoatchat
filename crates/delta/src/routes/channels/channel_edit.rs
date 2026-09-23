@@ -308,7 +308,7 @@ pub async fn edit(
 mod test {
     use std::collections::HashSet;
     use crate::{rocket, util::test::TestHarness};
-    use revolt_database::{Channel, RelationshipStatus};
+    use revolt_database::{Channel};
     use revolt_models::v0::{DataCreateGroup, SystemMessage};
     use rocket::http::{ContentType, Header, Status};
     use revolt_database::events::client::EventV1;
