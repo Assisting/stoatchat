@@ -70,8 +70,8 @@ pub async fn edit(
             }
 
             // Ensure new owner is not a bot
-            let new_owner_user = db.fetch_user(&new_owner).await;
-            if new_owner_user.is_ok_and(|u| u.bot.is_some()) {
+            let new_owner_user = db.fetch_user(&new_owner).await?;
+            if new_owner_user.bot.is_some() {
                 return Err(create_error!(IsBot))
             }
 
