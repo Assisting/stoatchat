@@ -24,8 +24,7 @@ base64 = { workspace = true }
 aes-gcm = { workspace = true }
 typenum = { workspace = true }
 
-aws-config = { workspace = true }
-aws-sdk-s3 = { workspace = true, features = ["behavior-version-latest"] }
+aws-sdk-s3 = { workspace = true, default-features = false, features = ["behavior-version-latest", "sigv4a", "rt-tokio", "default-https-client"] }
 
 revolt-config = { workspace = true, features = ["report-macros"] }
 revolt-result = { workspace = true }
